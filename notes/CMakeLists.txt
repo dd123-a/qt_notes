@@ -16,7 +16,7 @@ add_executable(${PROJECT_NAME}
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
-        medo/about.h medo/appsetupmutex.h medo/config.h)
+        medo/about.h medo/appsetupmutex.h medo/config.h medo/dconfHotkey.h medo/feedback.h medo/hotkey.h medo/about.cpp medo/appsetupmutex.cpp medo/config.cpp)
 
 if (NOT CMAKE_PREFIX_PATH)
     message(WARNING "CMAKE_PREFIX_PATH is not defined, you may need to set it "

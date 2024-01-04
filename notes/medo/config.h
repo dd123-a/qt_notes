@@ -58,205 +58,205 @@ public:
 
     /*! 设置配置文件路径。不验证路径是否适用于目的。
      * \param configurationFilePath 配置文件的完整路径。 */
-     static void setConfigurationFilePath(QString configurationFilePath);
+    static void setConfigurationFilePath(QString configurationFilePath);
 
-     /*! 返回状态文件路径。如果文件不存在，将创建它。返回值已缓存。 */
-     static QString stateFile();
+    /*! 返回状态文件路径。如果文件不存在，将创建它。返回值已缓存。 */
+    static QString stateFile();
 
-     /*! 返回状态文件路径。返回值已缓存。
-     * 安装时：
-     *   Linux：文件保存在配置目录下（例如~/.config/<appname>.user）。
-     *   Windows：文件保存在应用程序数据路径下（例如C:/Users/<UserName>/AppData/Roaming/<OrgName>/<AppName>/<AppName>.user）。
-     * 便携式时（未安装或配置文件存在）：
-     *   Linux：使用当前目录下的配置文件（例如./.<appname>.user）。
-     *   Windows：使用当前目录下的配置文件（例如./<AppName>.user）。 */
-     static QString stateFilePath();
+    /*! 返回状态文件路径。返回值已缓存。
+    * 安装时：
+    *   Linux：文件保存在配置目录下（例如~/.config/<appname>.user）。
+    *   Windows：文件保存在应用程序数据路径下（例如C:/Users/<UserName>/AppData/Roaming/<OrgName>/<AppName>/<AppName>.user）。
+    * 便携式时（未安装或配置文件存在）：
+    *   Linux：使用当前目录下的配置文件（例如./.<appname>.user）。
+    *   Windows：使用当前目录下的配置文件（例如./<AppName>.user）。 */
+    static QString stateFilePath();
 
-     /*! 设置状态文件路径。不验证路径是否适用于目的。
-     * \param stateFilePath 状态文件的完整路径。 */
-     static void setStateFilePath(QString stateFilePath);
+    /*! 设置状态文件路径。不验证路径是否适用于目的。
+    * \param stateFilePath 状态文件的完整路径。 */
+    static void setStateFilePath(QString stateFilePath);
 
-     /*! 返回数据目录路径。如果目录不存在，将创建它。返回值已缓存。 */
-     static QString dataDirectory();
+    /*! 返回数据目录路径。如果目录不存在，将创建它。返回值已缓存。 */
+    static QString dataDirectory();
 
-     /*! 返回数据目录路径。返回值已缓存。
-     * 安装时：
-     *   Linux：数据将保存在本地共享目录中（例如~/.local/share/<appname>）。
-     *   Windows：数据将保存在应用程序数据路径的子目录中（例如C:/Users/<UserName>/AppData/Roaming/<OrgName>/<AppName>/Data/）。
-     * 便携式时（未安装或配置文件存在）：
-     *   Linux：使用当前目录下的子目录（例如./.<appname>.data）。
-     *   Windows：使用当前目录下的子目录（例如./<AppName>.Data/）。 */
-     static QString dataDirectoryPath();
+    /*! 返回数据目录路径。返回值已缓存。
+    * 安装时：
+    *   Linux：数据将保存在本地共享目录中（例如~/.local/share/<appname>）。
+    *   Windows：数据将保存在应用程序数据路径的子目录中（例如C:/Users/<UserName>/AppData/Roaming/<OrgName>/<AppName>/Data/）。
+    * 便携式时（未安装或配置文件存在）：
+    *   Linux：使用当前目录下的子目录（例如./.<appname>.data）。
+    *   Windows：使用当前目录下的子目录（例如./<AppName>.Data/）。 */
+    static QString dataDirectoryPath();
 
-     /*! 设置数据目录路径。不验证路径是否适用于目的。
-     * \param dataDirectoryPath 数据目录的完整路径。 */
-     static void setDataDirectoryPath(QString dataDirectoryPath);
+    /*! 设置数据目录路径。不验证路径是否适用于目的。
+    * \param dataDirectoryPath 数据目录的完整路径。 */
+    static void setDataDirectoryPath(QString dataDirectoryPath);
 
-     /*! 返回给定键的值，如果未找到，则返回空的QString。
+    /*! 返回给定键的值，如果未找到，则返回空的QString。
+   * /param key 键。 */
+    static QString read(QString key);
+
+    /*! 返回给定键的值，如果未找到，则返回默认值。
+   * /param key 键。
+   * /param defaultValue 默认值。 */
+    static QString read(QString key, QString defaultValue);
+
+    /*! 将值写入给定键。
+    * /param key 键。
+    * /param value 值。 */
+    static void write(QString key, QString value);
+
+    /*! 返回给定键的值，如果未找到，则返回默认值。
+   * /param key 键。
+   * /param defaultValue 默认值。 */
+    static QString read(QString key, const char* defaultValue);
+
+    /*! 将值写入给定键。
+    * /param key 键。
+    * /param value 值。 */
+    static void write(QString key, const char* value);
+
+    /*! 返回给定键的值，如果未找到或无法转换为bool，则返回默认值。
+    * /param key 键。
+    * /param defaultValue 默认值。 */
+    static bool read(QString key, bool defaultValue);
+
+    /*! 将值写入给定键。
+    * /param key 键。
+    * /param value 值。 */
+    static void write(QString key, bool value);
+
+    /*! 返回给定键的值，如果未找到或无法转换为int，则返回默认值。
+    * /param key 键。
+    * /param defaultValue 默认值。 */
+    static int read(QString key, int defaultValue);
+
+    /*! 将值写入给定键。
+    * /param key 键。
+    * /param value 值。 */
+    static void write(QString key, int value);
+
+    /*! 返回给定键的值，如果未找到或无法转换为long，则返回默认值。
+    * /param key 键。
+    * /param defaultValue 默认值。 */
+    static long long read(QString key, long long defaultValue);
+
+    /*! 将值写入给定键。
+     * /param key 键。
+     * /param value 值。 */
+    static void write(QString key, long long value);
+
+    /*! 返回给定键的值，如果未找到或无法转换为double，则返回默认值。
+     * /param key 键。
+     * /param defaultValue 默认值。 */
+    static double read(QString key, double defaultValue);
+
+    /*! 将值写入给定键。
+     * /param key 键。
+     * /param value 值。 */
+    static void write(QString key, double value);
+
+    /*! 返回给定键的所有值，如果键不存在，则返回空列表。
     * /param key 键。 */
-     static QString read(QString key)
+    static QStringList readMany(QString key);
 
-     /*! 返回给定键的值，如果未找到，则返回默认值。
+    /*! 返回给定键的所有值，如果键不存在，则返回默认值。
+     * /param key 键。
+     * /param defaultValues 默认值。 */
+    static QStringList readMany(QString key, QStringList defaultValues);
+
+    /*! 将值写入给定键。
+     * /param key 键。
+     * /param values 值。 */
+    static void writeMany(QString key, QStringList values);
+
+
+    /*! 删除给定键的所有值。
+    * /param key 键。 */
+    static void remove(QString key);
+
+    /*! 删除所有值。 */
+    static void removeAll();
+
+    /*! 返回给定键的状态值，如果未找到，则返回默认值。
     * /param key 键。
     * /param defaultValue 默认值。 */
-     static QString read(QString key, QString defaultValue);
+    static QString stateRead(QString key, QString defaultValue);
 
-     /*! 将值写入给定键。
+    /*! 将状态值写入给定键。
      * /param key 键。
      * /param value 值。 */
-     static void write(QString key, QString value);
+    static void stateWrite(QString key, QString value);
 
-     /*! 返回给定键的值，如果未找到，则返回默认值。
+    /*! 返回给定键的状态值，如果未找到，则返回默认值。
+     * /param key 键。
+     * /param defaultValue 默认值。 */
+    static QString stateRead(QString key, const char* defaultValue);
+
+    /*! 将状态值写入给定键。
+     * /param key 键。
+     * /param value 值。 */
+    static void stateWrite(QString key, const char* value);
+
+    /*! 返回给定键的状态值，如果未找到或无法转换为bool，则返回默认值。
     * /param key 键。
     * /param defaultValue 默认值。 */
-     static QString read(QString key, const char* defaultValue);
+    static bool stateRead(QString key, bool defaultValue);
 
-     /*! 将值写入给定键。
+    /*! 将状态值写入给定键。
      * /param key 键。
      * /param value 值。 */
-     static void write(QString key, const char* value);
+    static void stateWrite(QString key, bool value);
 
-     /*! 返回给定键的值，如果未找到或无法转换为bool，则返回默认值。
+    /*! 返回给定键的状态值，如果未找到或无法转换为int，则返回默认值。
      * /param key 键。
      * /param defaultValue 默认值。 */
-     static bool read(QString key, bool defaultValue)
+    static int stateRead(QString key, int defaultValue);
 
-     /*! 将值写入给定键。
+    /*! 将状态值写入给定键。
      * /param key 键。
      * /param value 值。 */
-     static void write(QString key, bool value);
+    static void stateWrite(QString key, int value);
 
-     /*! 返回给定键的值，如果未找到或无法转换为int，则返回默认值。
+    /*! 返回给定键的状态值，如果未找到或无法转换为long，则返回默认值。
      * /param key 键。
      * /param defaultValue 默认值。 */
-     static int read(QString key, int defaultValue);
+    static long long stateRead(QString key, long long defaultValue);
 
-     /*! 将值写入给定键。
+    /*! 将状态值写入给定键。
      * /param key 键。
      * /param value 值。 */
-     static void write(QString key, int value);
+    static void stateWrite(QString key, long long value);
 
-     /*! 返回给定键的值，如果未找到或无法转换为long，则返回默认值。
+    /*! 返回给定键的状态值，如果未找到或无法转换为double，则返回默认值。
      * /param key 键。
      * /param defaultValue 默认值。 */
-     static long long read(QString key, long long defaultValue);
+    static double stateRead(QString key, double defaultValue);
 
-     /*! 将值写入给定键。
-      * /param key 键。
-      * /param value 值。 */
-     static void write(QString key, long long value);
+    /*! 将状态值写入给定键。
+     * /param key 键。
+     * /param value 值。 */
+    static void stateWrite(QString key, double value);
 
-     /*! 返回给定键的值，如果未找到或无法转换为double，则返回默认值。
-      * /param key 键。
-      * /param defaultValue 默认值。 */
-     static double read(QString key, double defaultValue);
 
-     /*! 将值写入给定键。
-      * /param key 键。
-      * /param value 值。 */
-     static void write(QString key, double value);
-
-     /*! 返回给定键的所有值，如果键不存在，则返回空列表。
+    /*! 返回给定键的所有状态值，如果键不存在，则返回空列表。
      * /param key 键。 */
-     static QStringList readMany(QString key);
+    static QStringList stateReadMany(QString key);
 
-     /*! 返回给定键的所有值，如果键不存在，则返回默认值。
-      * /param key 键。
-      * /param defaultValues 默认值。 */
-     static QStringList readMany(QString key, QStringList defaultValues);
-
-     /*! 将值写入给定键。
-      * /param key 键。
-      * /param values 值。 */
-     static void writeMany(QString key, QStringList values);
-
-
-     /*! 删除给定键的所有值。
+    /*! 返回给定键的所有状态值，如果键不存在，则返回空列表。
      * /param key 键。 */
-     static void remove(QString key);
+    static QStringList stateReadMany(QString key, QStringList defaultValues);
 
-     /*! 删除所有值。 */
-     static void removeAll();
-
-     /*! 返回给定键的状态值，如果未找到，则返回默认值。
-     * /param key 键。
-     * /param defaultValue 默认值。 */
-     static QString stateRead(QString key, QString defaultValue);
-
-     /*! 将状态值写入给定键。
-      * /param key 键。
-      * /param value 值。 */
-     static void stateWrite(QString key, QString value);
-
-     /*! 返回给定键的状态值，如果未找到，则返回默认值。
-      * /param key 键。
-      * /param defaultValue 默认值。 */
-     static QString stateRead(QString key, const char* defaultValue);
-
-     /*! 将状态值写入给定键。
-      * /param key 键。
-      * /param value 值。 */
-     static void stateWrite(QString key, const char* value);
-
-     /*! 返回给定键的状态值，如果未找到或无法转换为bool，则返回默认值。
-     * /param key 键。
-     * /param defaultValue 默认值。 */
-     static bool stateRead(QString key, bool defaultValue);
-
-     /*! 将状态值写入给定键。
-      * /param key 键。
-      * /param value 值。 */
-     static void stateWrite(QString key, bool value);
-
-     /*! 返回给定键的状态值，如果未找到或无法转换为int，则返回默认值。
-      * /param key 键。
-      * /param defaultValue 默认值。 */
-     static int stateRead(QString key, int defaultValue);
-
-     /*! 将状态值写入给定键。
-      * /param key 键。
-      * /param value 值。 */
-     static void stateWrite(QString key, int value);
-
-     /*! 返回给定键的状态值，如果未找到或无法转换为long，则返回默认值。
-      * /param key 键。
-      * /param defaultValue 默认值。 */
-     static long long stateRead(QString key, long long defaultValue);
-
-     /*! 将状态值写入给定键。
-      * /param key 键。
-      * /param value 值。 */
-     static void stateWrite(QString key, long long value);
-
-     /*! 返回给定键的状态值，如果未找到或无法转换为double，则返回默认值。
-      * /param key 键。
-      * /param defaultValue 默认值。 */
-     static double stateRead(QString key, double defaultValue);
-
-     /*! 将状态值写入给定键。
-      * /param key 键。
-      * /param value 值。 */
-     static void stateWrite(QString key, double value);
-
-
-     /*! 返回给定键的所有状态值，如果键不存在，则返回空列表。
+    /*! 将状态值写入给定键。
       * /param key 键。 */
-     static QStringList stateReadMany(QString key);
-
-     /*! 返回给定键的所有状态值，如果键不存在，则返回空列表。
-      * /param key 键。 */
-     static QStringList stateReadMany(QString key, QStringList defaultValues);
-
-     /*! 将状态值写入给定键。
-       * /param key 键。 */
-     static void stateWriteMany(QString key, QStringList values);
+    static void stateWriteMany(QString key, QStringList values);
 
 private:
     enum class PortableStatus{
-        Unkonw=-1,
+        Unknown=-1,
         False=0,
         True=1,
-    };
+        };
 
 private:
     //确保多线程环境下对公共资源的访问没有冲突
@@ -353,52 +353,37 @@ private:
             QString getValue();
             void setValue(QString newValue);
             QString toString();
-            static void escapeIntoStringBuilder(QString* sb,)
+            static void escapeIntoStringBuilder(QString* sb, QString text, bool isKey = false);
+            bool isEmpty();
 
+        private:
+            QString _key;               // 用于存储数据的关键字或键
+            QString _separatorPrefix;   // 数据分隔符的前缀
+            QString _separator;         // 数据分隔符
+            QString _separatorSuffix;   // 数据分隔符的后缀
+            QString _value;             // 与关键字相关联的值
+            QString _commentPrefix;     // 注释的前缀
+            QString _comment;           // 注释的内容
         };
+    private:
+        void processLine(QString line);  // 用于处理传入的文本行的函数
 
+        QVector<LineData> _lines;        // 用于存储 LineData 类的实例的向量，表示多行数据
+        bool _fileLoaded;                // 用于标识文件是否已加载的布尔变量
+        QString _filePath;               // 用于存储文件路径的字符串
+        QString _lineEnding;             // 用于存储行结束符的字符串
+        QString _kind;                   // 用于表示某种类型的字符串
     };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+private:
+    static ConfigFile* getConfigFile();    // 获取配置文件的静态成员函数
+    static void resetConfigFile();         // 重置配置文件的静态成员函数
+    static ConfigFile* _configFile;        // 静态成员变量，存储配置文件的实例
+    static QMutex _configFileMutex;        // 用于对配置文件进行互斥操作的互斥量
+    static ConfigFile* getStateFile();     // 获取状态文件的静态成员函数
+    static void resetStateFile();          // 重置状态文件的静态成员函数
+    static ConfigFile* _stateFile;         // 静态成员变量，存储状态文件的实例
+    static QMutex _stateFileMutex;         // 用于对状态文件进行互斥操作的互斥量
 
 
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
 #endif //NOTES_CONFIG_H
