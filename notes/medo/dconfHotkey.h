@@ -11,11 +11,11 @@
 
 namespace Medo{class DCOnfHotKey;}
 
-class DCOnfHotKey:public QObject{
+class DConfHotkey:public QObject{
     Q_OBJECT        // 使用 Qt 的宏，用于启用信号和槽机制
 
 public:
-    explicit DCOnfHotKey(QString name,QObject* parent= nullptr);
+    explicit DConfHotkey(QString name,QObject* parent= nullptr);
 
     /*! 注册热键。
      * \param key 热键。不能有多个键组合。 */

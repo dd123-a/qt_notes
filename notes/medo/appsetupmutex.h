@@ -21,7 +21,8 @@ public:
 private:
 #if defined(Q_OS_WIN)
     //用于在Windows平台下操作互斥量。
-    HANDLE _mutexHandle
+    HANDLE _mutexHandle;
+#endif
 };
 
 

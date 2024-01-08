@@ -13,7 +13,7 @@ namespace Medo{
 
 class About{
 public:
-    static void showDialog(QWidget* parent= nullptr)
+    static void showDialog(QWidget* parent= nullptr);
 };
 
 #endif //NOTES_ABOUT_H
