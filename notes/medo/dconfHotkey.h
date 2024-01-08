@@ -1,43 +1,32 @@
-//
-// Created by DrTang on 2023/12/25.
-//
-
-#ifndef NOTES_DCONFHOTKEY_H
-#define NOTES_DCONFHOTKEY_H
+/* Josip Medved <jmedved@jmedved.com> * www.medo64.com * MIT License */
+// 2022-03-05: Initial version
 
 #pragma once
 #include <QObject>
 #include <QKeySequence>
 
-namespace Medo{class DCOnfHotKey;}
+namespace Medo { class DConfHotkey; }
 
-class DConfHotkey:public QObject{
-    Q_OBJECT        // 使用 Qt 的宏，用于启用信号和槽机制
+class DConfHotkey : public QObject {
+        Q_OBJECT
 
-public:
-    explicit DConfHotkey(QString name,QObject* parent= nullptr);
+    public:
 
-    /*! 注册热键。
-     * \param key 热键。不能有多个键组合。 */
-    bool registerHotkey(QKeySequence key);
+        /*! Creates a new instance */
+        explicit DConfHotkey(QString name, QObject* parent = nullptr);
 
-    /*! 禁用当前注册的热键。 */
-    bool unregisterHotkey();
+        /*! Registers hotkey.
+         * \param key Hotkey. Cannot have more than one key combination. */
+        bool registerHotkey(QKeySequence key);
 
-    /*! 是否有注册的热键。 */
-    bool hasRegisteredHotkey();
+        /*! Disables currently registered hotkey. */
+        bool unregisterHotkey();
 
-private:
-    QString _name;// 用于存储热键名称的成员变量
+        /*! Has registered hotkey. */
+        bool hasRegisteredHotkey();
+
+
+    private:
+        QString _name;
 
 };
-
-
-
-
-
-
-
-
-
-#endif //NOTES_DCONFHOTKEY_H

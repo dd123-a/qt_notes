@@ -1,7 +1,3 @@
-//
-// Created by DrTang on 2023/12/26.
-//
-
 #include "config.h"
 #include <QCoreApplication>
 #include <QDebug>
@@ -12,113 +8,55 @@
 #include <QTextStream>
 #include <QTimer>
 
-// 配置类的静态成员变量声明及初始化
-
-// 用于公共访问的互斥锁，支持递归
 QMutex Config::_publicAccessMutex(QMutex::Recursive);
-
-// 用于配置文件访问的互斥锁，不支持递归
 QMutex Config::_configFileMutex(QMutex::NonRecursive);
-
-// 用于状态文件访问的互斥锁，不支持递归
 QMutex Config::_stateFileMutex(QMutex::NonRecursive);
-
-// 配置文件路径
 QString Config::_configurationFilePath;
-
-// 状态文件路径
 QString Config::_stateFilePath;
-
-// 数据目录路径
 QString Config::_dataDirectoryPath;
-
-// 应用的可移植状态，初始为未知
 Config::PortableStatus Config::_isPortable(PortableStatus::Unknown);
-
-// 是否立即保存配置的标志
 bool Config::_immediateSave(true);
+Config::ConfigFile* Config::_configFile(nullptr);
+Config::ConfigFile* Config::_stateFile(nullptr);
 
-// 配置文件实例指针
-Config::ConfigFile *Config::_configFile(nullptr);
-
-// 状态文件实例指针
-Config::ConfigFile *Config::_stateFile(nullptr);
-
-// 重置配置信息
 void Config::reset() {
-    // 输出调试信息，表示开始重置配置
     qDebug().noquote().nospace() << "[Config] reset()";
+    QElapsedTimer stopwatch; stopwatch.start();
 
-    // 计时器，用于测量重置过程的时间
-    QElapsedTimer stopwatch;
-    stopwatch.start();
-
-    // 使用互斥锁，确保在多线程环境中安全地执行重置操作
     QMutexLocker locker(&_publicAccessMutex);
 
-    // 将配置文件路径、状态文件路径、数据目录路径置为空字符串
     _configurationFilePath = QString();
     _stateFilePath = QString();
     _dataDirectoryPath = QString();
-
-    // 将应用的可移植状态设置为未知
     _isPortable = PortableStatus::Unknown;
-
-    // 将是否立即保存配置的标志设置为 true
     _immediateSave = true;
-
-    // 调用重置配置文件的函数
     resetConfigFile();
-
-    // 调用重置状态文件的函数
     resetStateFile();
 
-    // 输出调试信息，表示重置完成，并输出重置所用的时间
     qDebug().noquote().nospace() << "[Config] reset() done in " << stopwatch.elapsed() << "ms";
 }
 
-// 加载配置信息
 bool Config::load() {
-    // 使用互斥锁确保在多线程环境中安全地执行加载操作
     QMutexLocker locker(&_publicAccessMutex);
-
-    // 输出调试信息，表示开始加载配置
     qDebug().noquote().nospace() << "[Config] load()";
 
-    // 调用重置配置文件的函数
     resetConfigFile();
-
-    // 调用重置状态文件的函数
     resetStateFile();
-
-    // 创建 QFile 对象，表示配置文件
     QFile file(configurationFilePath());
 
-    // 检查配置文件是否存在
     if (file.exists()) {
-        // 如果配置文件存在，返回 true 表示加载成功
         return true;
     } else {
-        // 如果配置文件不存在，返回 false 表示加载失败
         return false;
     }
 }
 
-// 保存配置信息
 bool Config::save() {
-    // 使用互斥锁确保在多线程环境中安全地执行保存操作
     QMutexLocker locker(&_publicAccessMutex);
-
-    // 输出调试信息，表示开始保存配置
     qDebug().noquote().nospace() << "[Config] save()";
 
-    // 调用 getConfigFile 函数获取配置文件实例，并调用其 save 函数保存配置
     bool success = getConfigFile()->save();
-
-    // 调用 getStateFile 函数获取状态文件实例，并调用其 save 函数保存状态
-    getStateFile()->save();  // 忽略状态以确定返回码
-
-    // 返回保存配置是否成功的标志
+    getStateFile()->save();  // ignore status for return code
     return success;
 }
 
@@ -133,63 +71,54 @@ void Config::quit() {
     resetStateFile();
 }
 
+
 bool Config::isPortable() {
-    QMutexLocker locker(&_publicAccessMutex); // 使用互斥锁确保线程安全
+    QMutexLocker locker(&_publicAccessMutex);
 
-    if (_isPortable == PortableStatus::Unknown) { // 如果未确定是否是便携模式
+    if (_isPortable == PortableStatus::Unknown) {
         QString exePath = QCoreApplication::applicationFilePath();
-        assert(!exePath.isNull()); // 在调试模式下，如果QApplication未初始化，则触发断言失败
-
-        if (exePath.isNull()) { // 如果在QApplication初始化之前调用，假设是安装模式
+        assert(!exePath.isNull()); //fail if QApplication is not initialized in debug mode
+        if (exePath.isNull()) { //probably got called before QApplication got initialized, assume installed
             _isPortable = PortableStatus::False;
             return false;
         }
 
 #if defined(Q_OS_WIN)
-        // Windows平台的路径检测
-        QString localAppDataEnv{QDir::cleanPath(getenv("LOCALAPPDATA"))};
-        QString programFilesEnv{QDir::cleanPath(getenv("ProgramFiles"))};
-        QString programFilesX86Env{QDir::cleanPath(getenv("ProgramFiles(x86)"))};
-        QString programFilesW6432Env{QDir::cleanPath(getenv("ProgramW6432"))};
+        QString localAppDataEnv { QDir::cleanPath(getenv("LOCALAPPDATA")) };
+        QString programFilesEnv { QDir::cleanPath(getenv("ProgramFiles")) };
+        QString programFilesX86Env { QDir::cleanPath(getenv("ProgramFiles(x86)")) };
+        QString programFilesW6432Env { QDir::cleanPath(getenv("ProgramW6432")) };
         QString localAppDataPath = !localAppDataEnv.isEmpty() ? localAppDataEnv + "/Programs/" : QString();
         QString programFilesPath = !programFilesEnv.isEmpty() ? programFilesEnv + "/" : QString();
         QString programFilesX86Path = !programFilesX86Env.isEmpty() ? programFilesX86Env + "/" : QString();
         QString programFilesW6432Path = !programFilesW6432Env.isEmpty() ? programFilesW6432Env + "/" : QString();
-        QString localAppDataProgramsPath{
-                !localAppDataPath.isEmpty() ? localAppDataPath + "/Programs/" + "/" : QString()};
-        bool isLocalAppData = !localAppDataPath.isEmpty() ? exePath.startsWith(localAppDataPath, Qt::CaseInsensitive)
-                                                          : false;
-        bool isProgramFiles = !programFilesPath.isEmpty() ? exePath.startsWith(programFilesPath, Qt::CaseInsensitive)
-                                                          : false;
-        bool isProgramFilesX86 = !programFilesX86Path.isEmpty() ? exePath.startsWith(programFilesX86Path,
-                                                                                     Qt::CaseInsensitive) : false;
-        bool isProgramFilesW6432 = !programFilesW6432Path.isEmpty() ? exePath.startsWith(programFilesW6432Path,
-                                                                                         Qt::CaseInsensitive) : false;
+        QString localAppDataProgramsPath { !localAppDataPath.isEmpty() ? localAppDataPath + "/Programs/" + "/" : QString() };
+        bool isLocalAppData = !localAppDataPath.isEmpty() ? exePath.startsWith(localAppDataPath, Qt::CaseInsensitive) : false;
+        bool isProgramFiles = !programFilesPath.isEmpty() ? exePath.startsWith(programFilesPath, Qt::CaseInsensitive) : false;
+        bool isProgramFilesX86 = !programFilesX86Path.isEmpty() ? exePath.startsWith(programFilesX86Path, Qt::CaseInsensitive) : false;
+        bool isProgramFilesW6432 = !programFilesW6432Path.isEmpty() ? exePath.startsWith(programFilesW6432Path, Qt::CaseInsensitive) : false;
         bool isInstalled = isLocalAppData || isProgramFiles || isProgramFilesX86 || isProgramFilesW6432;
-
 #elif defined(Q_OS_LINUX)
-        // Linux平台的路径检测
         QStringList homePaths = QStandardPaths::standardLocations(QStandardPaths::HomeLocation);
         QString homeBinPath = (homePaths.count() > 0) ? QDir::cleanPath(homePaths[0] + "/bin") + "/" : QString();
         QString homeLocalBinPath = (homePaths.count() > 0) ? QDir::cleanPath(homePaths[0] + "/.local/bin") + "/" : QString();
         bool isHomeBin = !homeBinPath.isEmpty() ? exePath.startsWith(homeBinPath, Qt::CaseSensitive) : false;
         bool isHomeLocalBin = !homeLocalBinPath.isEmpty() ? exePath.startsWith(homeLocalBinPath, Qt::CaseSensitive) : false;
         bool isOpt = exePath.startsWith("/opt/", Qt::CaseSensitive);
-        bool isBin = exePath.startsWith("/bin/", Qt. CaseSensitive);
+        bool isBin = exePath.startsWith("/bin/", Qt::CaseSensitive);
         bool isUsrBin = exePath.startsWith("/usr/bin/", Qt::CaseSensitive);
         bool isUsrLocalBin = exePath.startsWith("/usr/local/bin/", Qt::CaseSensitive);
         bool isInstalled = isHomeBin || isHomeLocalBin || isOpt || isBin || isUsrBin || isUsrLocalBin;
 #endif
 
-        QFileInfo portableConfigFile(configurationFilePathWhenPortable());
+        QFileInfo portableConfigFile (configurationFilePathWhenPortable());
         if (portableConfigFile.exists()) {
-            _isPortable = PortableStatus::True; // 强制设置为便携模式，如果存在本地文件
+            _isPortable = PortableStatus::True; //force portable if there is a local file
         } else {
-            // 如果未安装在标准路径中，则设置为便携模式
             _isPortable = !isInstalled ? PortableStatus::True : PortableStatus::False;
         }
     }
-    return (_isPortable == PortableStatus::True); // 返回是否是便携模式
+    return (_isPortable == PortableStatus::True);
 }
 
 void Config::setPortable(bool portable) {
@@ -198,93 +127,76 @@ void Config::setPortable(bool portable) {
     _isPortable = portable ? PortableStatus::True : PortableStatus::False;
 }
 
-bool Config::immediateSave() {
-    QMutexLocker locker(&_publicAccessMutex); // 使用互斥锁确保线程安全
 
-    return _immediateSave; // 返回成员变量 _immediateSave 的当前值
+bool Config::immediateSave() {
+    QMutexLocker locker(&_publicAccessMutex);
+    return _immediateSave;
 }
 
 void Config::setImmediateSave(bool saveImmediately) {
-    QMutexLocker locker(&_publicAccessMutex); // 使用互斥锁确保线程安全
-
-    _immediateSave = saveImmediately; // 设置成员变量 _immediateSave 的值为传入的参数
-
-    if (_immediateSave) {  // 如果需要立即保存
-        // 确保任何挂起的写操作被清除
-        getConfigFile()->requestSave(); // 请求保存配置文件
-        getStateFile()->requestSave();  // 请求保存状态文件
+    QMutexLocker locker(&_publicAccessMutex);
+    _immediateSave = saveImmediately;
+    if (_immediateSave) {  //to ensure any pending writes are cleared
+        getConfigFile()->requestSave();
+        getStateFile()->requestSave();
     }
 }
 
-QString Config::configurationFile() {
-    QMutexLocker locker(&_publicAccessMutex); // 使用互斥锁确保线程安全
 
-    // 获取配置文件的路径
+QString Config::configurationFile() {
+    QMutexLocker locker(&_publicAccessMutex);
+
     QString configPath = configurationFilePath();
 
-    // 获取配置文件的信息
-    QFileInfo configFileInfo(configPath);
+    QFileInfo configFileInfo (configPath);
     QDir configFileDir = configFileInfo.dir();
+    if (!configFileDir.exists()) { configFileDir.mkpath("."); }
 
-    // 如果配置文件的目录不存在，则创建该目录
-    if (!configFileDir.exists()) {
-        configFileDir.mkpath(".");
-    }
-
-    // 如果配置文件不存在，则创建一个空的配置文件
-    QFile configFile(configPath);
+    QFile configFile (configPath);
     if (!configFile.exists()) {
         configFile.open(QFile::WriteOnly);
         configFile.close();
     }
 
-    return configPath; // 返回配置文件的路径
+    return configPath;
 }
 
 QString Config::configurationFilePath() {
-    QMutexLocker locker(&_publicAccessMutex); // 使用互斥锁确保线程安全
+    QMutexLocker locker(&_publicAccessMutex);
 
     if (_configurationFilePath.isEmpty()) {
-        // 如果配置文件路径为空，根据是否为便携式设置不同的路径
         _configurationFilePath = isPortable() ? configurationFilePathWhenPortable() : configurationFilePathWhenInstalled();
     }
-    return _configurationFilePath; // 返回配置文件的路径
+    return _configurationFilePath;
 }
 
 void Config::setConfigurationFilePath(QString configurationFilePath) {
-    QMutexLocker locker(&_publicAccessMutex); // 使用互斥锁确保线程安全
-    resetConfigFile(); // 重置配置文件
+    QMutexLocker locker(&_publicAccessMutex);
+    resetConfigFile();
 
-    // 清理并更新新的配置文件路径
     QString newPath = QDir::cleanPath(configurationFilePath);
-    if (newPath.startsWith("~/")) {
-        newPath = QDir::homePath() + newPath.mid(1); // 允许使用 tilde (~) 表示家目录
-    }
+    if (newPath.startsWith("~/")) { newPath = QDir::homePath() + newPath.mid(1); } //allow use of tilda (~) for home directory
 
-    _configurationFilePath = newPath; // 设置新的配置文件路径
+    _configurationFilePath = newPath;
 }
 
 QString Config::configurationFilePathWhenPortable() {
 #if defined(Q_OS_WIN)
-    // Windows平台下，返回可执行文件所在目录下以应用程序名称为名的配置文件路径
     QString applicationName = QCoreApplication::applicationName();
     assert(applicationName.length() > 0);
 
     QString exeDir = QCoreApplication::applicationDirPath();
     QString configFile = exeDir + "/" + applicationName + ".cfg";
 #elif defined(Q_OS_LINUX)
-    // Linux平台下，返回可执行文件所在目录下以应用程序名称为名的隐藏文件
-    QString applicationName = QCoreApplication::applicationName().simplified().replace(" ", "").toLower();
+    QString applicationName = QCoreApplication::applicationName().simplified().replace(" ", "").toLower(); //lowercase with spaces removed
     assert(applicationName.length() > 0);
 
     QString exeDir = QCoreApplication::applicationDirPath();
-    if (exeDir.isNull()) {
-        return configurationFilePathWhenInstalled(); // 如果目录为空，回退到默认安装路径
-    }
+    if (exeDir.isNull()) { return configurationFilePathWhenInstalled(); } //fallback to installed
     QString configFile = exeDir + "/." + applicationName.toLower();
 #endif
 
-    return QDir::cleanPath(configFile); // 返回清理过的配置文件路径
+    return QDir::cleanPath(configFile);
 }
 
 QString Config::configurationFilePathWhenInstalled() {
@@ -479,12 +391,12 @@ void Config::write(QString key, const char* value) {
 bool Config::read(QString key, bool defaultValue) {
     QString text = read(key, QString()).trimmed();
     if ((text.compare("true", Qt::CaseInsensitive) == 0) || (text.compare("yes", Qt::CaseInsensitive) == 0)
-    || (text.compare("T", Qt::CaseInsensitive) == 0) || (text.compare("Y", Qt::CaseInsensitive) == 0)
-    || (text.compare("+", Qt::CaseInsensitive) == 0)) {
+            || (text.compare("T", Qt::CaseInsensitive) == 0) || (text.compare("Y", Qt::CaseInsensitive) == 0)
+            || (text.compare("+", Qt::CaseInsensitive) == 0)) {
         return true;
     } else if ((text.compare("false", Qt::CaseInsensitive) == 0) || (text.compare("no", Qt::CaseInsensitive) == 0)
-    || (text.compare("F", Qt::CaseInsensitive) == 0) || (text.compare("N", Qt::CaseInsensitive) == 0)
-    || (text.compare("-", Qt::CaseInsensitive) == 0)) {
+               || (text.compare("F", Qt::CaseInsensitive) == 0) || (text.compare("N", Qt::CaseInsensitive) == 0)
+               || (text.compare("-", Qt::CaseInsensitive) == 0)) {
         return false;
     } else {
         bool isOK; long long value = text.toLongLong(&isOK);
@@ -608,12 +520,12 @@ void Config::stateWrite(QString key, const char* value) {
 bool Config::stateRead(QString key, bool defaultValue) {
     QString text = stateRead(key, QString()).trimmed();
     if ((text.compare("true", Qt::CaseInsensitive) == 0) || (text.compare("yes", Qt::CaseInsensitive) == 0)
-    || (text.compare("T", Qt::CaseInsensitive) == 0) || (text.compare("Y", Qt::CaseInsensitive) == 0)
-    || (text.compare("+", Qt::CaseInsensitive) == 0)) {
+            || (text.compare("T", Qt::CaseInsensitive) == 0) || (text.compare("Y", Qt::CaseInsensitive) == 0)
+            || (text.compare("+", Qt::CaseInsensitive) == 0)) {
         return true;
     } else if ((text.compare("false", Qt::CaseInsensitive) == 0) || (text.compare("no", Qt::CaseInsensitive) == 0)
-    || (text.compare("F", Qt::CaseInsensitive) == 0) || (text.compare("N", Qt::CaseInsensitive) == 0)
-    || (text.compare("-", Qt::CaseInsensitive) == 0)) {
+               || (text.compare("F", Qt::CaseInsensitive) == 0) || (text.compare("N", Qt::CaseInsensitive) == 0)
+               || (text.compare("-", Qt::CaseInsensitive) == 0)) {
         return false;
     } else {
         bool isOK; long long value = text.toLongLong(&isOK);
@@ -787,7 +699,7 @@ Config::ConfigFile::ConfigFile(QString kind, QString filePath) {
     _lineEnding = !lineEnding.isNull() ? lineEnding : "\n";
 #endif
 
-    qDebug().noquote().nospace() << "[Config:" << _kind << "] load() done in " << stopwatch.elapsed() << "ms";
+qDebug().noquote().nospace() << "[Config:" << _kind << "] load() done in " << stopwatch.elapsed() << "ms";
 
 #ifdef QT_DEBUG
     for (LineData line : _lines) {
@@ -799,7 +711,7 @@ Config::ConfigFile::ConfigFile(QString kind, QString filePath) {
     }
 #endif
 
-_filePath = filePath;
+    _filePath = filePath;
     _backgroundSaveThread = new BackgroundSaveThread(this);
 }
 
@@ -841,127 +753,127 @@ void Config::ConfigFile::processLine(QString lineText) {
                 }
                 break;
 
-                case ProcessState::Comment:
+            case ProcessState::Comment:
+                sbComment.append(ch);
+                break;
+
+            case ProcessState::Key:
+                if (ch.isSpace()) {
+                    valueSeparator = ch;
+                    state = ProcessState::SeparatorOrValue;
+                } else if ((ch == ':') || (ch == '=')) {
+                    valueSeparator = ch;
+                    state = ProcessState::ValueOrWhitespace;
+                } else if (ch == '#') {
                     sbComment.append(ch);
-                    break;
+                    state = ProcessState::Comment;
+                } else if (ch == '\\') {
+                    state = ProcessState::KeyEscape;
+                } else {
+                    sbKey.append(ch);
+                }
+                break;
 
-                    case ProcessState::Key:
-                        if (ch.isSpace()) {
-                            valueSeparator = ch;
-                            state = ProcessState::SeparatorOrValue;
-                        } else if ((ch == ':') || (ch == '=')) {
-                            valueSeparator = ch;
-                            state = ProcessState::ValueOrWhitespace;
-                        } else if (ch == '#') {
-                            sbComment.append(ch);
-                            state = ProcessState::Comment;
-                        } else if (ch == '\\') {
-                            state = ProcessState::KeyEscape;
+            case ProcessState::SeparatorOrValue:
+                if (ch.isSpace()) {
+                } else if ((ch == ':') || (ch == '=')) {
+                    valueSeparator = ch;
+                    state = ProcessState::ValueOrWhitespace;
+                } else if (ch == '#') {
+                    sbComment.append(ch);
+                    state = ProcessState::Comment;
+                } else if (ch == '\\') {
+                    state = ProcessState::ValueEscape;
+                } else {
+                    sbValue.append(ch);
+                    state = ProcessState::Value;
+                }
+                break;
+
+            case ProcessState::ValueOrWhitespace:
+                if (ch.isSpace()) {
+                } else if (ch == '#') {
+                    sbComment.append(ch);
+                    state = ProcessState::Comment;
+                } else if (ch == '\\') {
+                    state = ProcessState::ValueEscape;
+                } else {
+                    sbValue.append(ch);
+                    state = ProcessState::Value;
+                }
+                break;
+
+            case ProcessState::Value:
+                if (ch.isSpace()) {
+                    state = ProcessState::ValueOrComment;
+                } else if (ch == '#') {
+                    sbComment.append(ch);
+                    state = ProcessState::Comment;
+                } else if (ch == '\\') {
+                    state = ProcessState::ValueEscape;
+                } else {
+                    sbValue.append(ch);
+                }
+                break;
+
+            case ProcessState::ValueOrComment:
+                if (ch.isSpace()) {
+                } else if (ch == '#') {
+                    sbComment.append(ch);
+                    state = ProcessState::Comment;
+                } else if (ch == '\\') {
+                    sbValue.append(sbWhitespace);
+                    state = ProcessState::ValueEscape;
+                } else {
+                    sbValue.append(sbWhitespace);
+                    sbValue.append(ch);
+                    state = ProcessState::Value;
+                }
+                break;
+
+            case ProcessState::KeyEscape:
+            case ProcessState::ValueEscape:
+                if (ch == 'u') {
+                    state = (state == ProcessState::KeyEscape) ? ProcessState::KeyEscapeLong : ProcessState::ValueEscapeLong;
+                } else {
+                    QChar newCh;
+                    switch (ch.unicode()) {
+                        case '0': newCh = '\000'; break;
+                        case 'a': newCh = '\a'; break;
+                        case 'b': newCh = '\b'; break;
+                        case 'f': newCh = '\f'; break;
+                        case 'n': newCh = '\n'; break;
+                        case 'r': newCh = '\r'; break;
+                        case 't': newCh = '\t'; break;
+                        case 'v': newCh = '\v'; break;
+                        case '_': newCh = ' '; break;
+                        default: newCh = ch; break;
+                    }
+                    if (state == ProcessState::KeyEscape) {
+                        sbKey.append(newCh);
+                    } else {
+                        sbValue.append(newCh);
+                    }
+                    state = (state == ProcessState::KeyEscape) ? ProcessState::Key : ProcessState::Value;
+                }
+                break;
+
+            case ProcessState::KeyEscapeLong:
+            case ProcessState::ValueEscapeLong:
+                sbEscapeLong.append(ch);
+                if (sbEscapeLong.length() == 4) {
+                    bool isOK;
+                    int chValue = sbEscapeLong.toInt(&isOK, 16);
+                    if (isOK) {
+                        if (state == ProcessState::KeyEscape) {
+                            sbKey.append(QChar(chValue));
                         } else {
-                            sbKey.append(ch);
+                            sbValue.append(QChar(chValue));
                         }
-                        break;
-
-                        case ProcessState::SeparatorOrValue:
-                            if (ch.isSpace()) {
-                            } else if ((ch == ':') || (ch == '=')) {
-                                valueSeparator = ch;
-                                state = ProcessState::ValueOrWhitespace;
-                            } else if (ch == '#') {
-                                sbComment.append(ch);
-                                state = ProcessState::Comment;
-                            } else if (ch == '\\') {
-                                state = ProcessState::ValueEscape;
-                            } else {
-                                sbValue.append(ch);
-                                state = ProcessState::Value;
-                            }
-                            break;
-
-                            case ProcessState::ValueOrWhitespace:
-                                if (ch.isSpace()) {
-                                } else if (ch == '#') {
-                                    sbComment.append(ch);
-                                    state = ProcessState::Comment;
-                                } else if (ch == '\\') {
-                                    state = ProcessState::ValueEscape;
-                                } else {
-                                    sbValue.append(ch);
-                                    state = ProcessState::Value;
-                                }
-                                break;
-
-                                case ProcessState::Value:
-                                    if (ch.isSpace()) {
-                                        state = ProcessState::ValueOrComment;
-                                    } else if (ch == '#') {
-                                        sbComment.append(ch);
-                                        state = ProcessState::Comment;
-                                    } else if (ch == '\\') {
-                                        state = ProcessState::ValueEscape;
-                                    } else {
-                                        sbValue.append(ch);
-                                    }
-                                    break;
-
-                                    case ProcessState::ValueOrComment:
-                                        if (ch.isSpace()) {
-                                        } else if (ch == '#') {
-                                            sbComment.append(ch);
-                                            state = ProcessState::Comment;
-                                        } else if (ch == '\\') {
-                                            sbValue.append(sbWhitespace);
-                                            state = ProcessState::ValueEscape;
-                                        } else {
-                                            sbValue.append(sbWhitespace);
-                                            sbValue.append(ch);
-                                            state = ProcessState::Value;
-                                        }
-                                        break;
-
-                                        case ProcessState::KeyEscape:
-                                            case ProcessState::ValueEscape:
-                                                if (ch == 'u') {
-                                                    state = (state == ProcessState::KeyEscape) ? ProcessState::KeyEscapeLong : ProcessState::ValueEscapeLong;
-                                                } else {
-                                                    QChar newCh;
-                                                    switch (ch.unicode()) {
-                                                        case '0': newCh = '\000'; break;
-                                                        case 'a': newCh = '\a'; break;
-                                                        case 'b': newCh = '\b'; break;
-                                                        case 'f': newCh = '\f'; break;
-                                                        case 'n': newCh = '\n'; break;
-                                                        case 'r': newCh = '\r'; break;
-                                                        case 't': newCh = '\t'; break;
-                                                        case 'v': newCh = '\v'; break;
-                                                        case '_': newCh = ' '; break;
-                                                        default: newCh = ch; break;
-                                                    }
-                                                    if (state == ProcessState::KeyEscape) {
-                                                        sbKey.append(newCh);
-                                                    } else {
-                                                        sbValue.append(newCh);
-                                                    }
-                                                    state = (state == ProcessState::KeyEscape) ? ProcessState::Key : ProcessState::Value;
-                                                }
-                                                break;
-
-                                                case ProcessState::KeyEscapeLong:
-                                                    case ProcessState::ValueEscapeLong:
-                                                        sbEscapeLong.append(ch);
-                                                        if (sbEscapeLong.length() == 4) {
-                                                            bool isOK;
-                                                            int chValue = sbEscapeLong.toInt(&isOK, 16);
-                                                            if (isOK) {
-                                                                if (state == ProcessState::KeyEscape) {
-                                                                    sbKey.append(QChar(chValue));
-                                                                } else {
-                                                                    sbValue.append(QChar(chValue));
-                                                                }
-                                                            }
-                                                            state = (state == ProcessState::KeyEscapeLong) ? ProcessState::Key : ProcessState::Value;
-                                                        }
-                                                        break;
+                    }
+                    state = (state == ProcessState::KeyEscapeLong) ? ProcessState::Key : ProcessState::Value;
+                }
+                break;
         }
 
         if (ch.isSpace() && (prevState != ProcessState::KeyEscape) && (prevState != ProcessState::ValueEscape) && (prevState != ProcessState::KeyEscapeLong) && (prevState != ProcessState::ValueEscapeLong)) {
@@ -1194,7 +1106,7 @@ Config::ConfigFile::LineData::LineData() {
 }
 
 Config::ConfigFile::LineData::LineData(LineData* lineTemplate, QString key, QString value)
-: LineData(key, QString(), QString(), QString(), value, QString(), QString()) {
+    : LineData(key, QString(), QString(), QString(), value, QString(), QString()) {
     if (lineTemplate != nullptr) {
         _separatorPrefix = lineTemplate->_separatorPrefix;
         _separator = lineTemplate->_separator;

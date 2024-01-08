@@ -1,19 +1,16 @@
-//
-// Created by DrTang on 2023/12/23.
-//
+/* Josip Medved <jmedved@jmedved.com> * www.medo64.com * MIT License */
 
-#ifndef NOTES_ABOUT_H
-#define NOTES_ABOUT_H
+// 2020-01-03: Initial version
+
 #pragma once
 
 #include <QWidget>
-namespace Medo{
-    class About;
-}
 
-class About{
-public:
-    static void showDialog(QWidget* parent= nullptr);
+namespace Medo { class About; }
+
+class About {
+
+    public:
+        static void showDialog(QWidget* parent = nullptr);
+
 };
-
-#endif //NOTES_ABOUT_H

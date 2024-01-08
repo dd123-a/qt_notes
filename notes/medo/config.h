@@ -1,9 +1,17 @@
-//
-// Created by DrTang on 2023/12/23.
-//
+/* Josip Medved <jmedved@jmedved.com> * www.medo64.com * MIT License */
 
-#ifndef NOTES_CONFIG_H
-#define NOTES_CONFIG_H
+// 2021-12-13: Refactored background save and added a quit() method
+// 2021-12-10: Added background save
+// 2020-05-25: Using strongly typed enums
+// 2020-05-05: Added stateRead/stateWrite for integers, longs, and doubles
+//             Allowing : and = in key name
+// 2020-04-26: Added extra escape sequences
+// 2019-07-17: Initial version
+// 2019-10-13: Added stateRead and stateWrite operations
+// 2019-11-01: Fixed readMany implementation
+// 2019-11-17: Added stateReadMany and stateWriteMany
+//             Added option to set paths manually
+// 2020-03-15: If QApplication hasn't been initialized, assume installed on Linux
 
 #pragma once
 
@@ -14,376 +22,407 @@
 #include <QThread>
 #include <QVariant>
 #include <QVector>
+#include <QSet>
+#include <QList>
 
-namespace Medo{class Config;}
+namespace Medo { class Config; }
 
-class Config{
-public:
-    //充值配置，包括缓存数据
-    static void reset();
+class Config {
 
-    /*! 强制重新加载配置文件。如果文件存在，则返回true。 */
-    static bool load();
-
-    /*! 强制立即保存配置文件。如果操作成功，则返回true。 */
-    static bool save();
-
-    /*! 强制立即保存配置文件，并在退出前清理一切。 */
-    static void quit();
-    /* 判断程序是否为便携式，即需要相关的库和配置文件在同一目录，则不是便携式程序*/
-    static bool isPortable();
-
-    /*设置是否为便携式，使配置文件和数据目录路径缓存失效*/
-    static void setPortable(bool portable);
-
-    /*写入配置时是否自动保存，默默人为true*/
-    static bool immediateSave();
-
-    /*! 设置是否写入配置时执行自动保存。
-     * \param saveImmediately 如果为true，任何写入将导致立即保存。 */
-    static void setImmediateSave(bool saveImmediately);
-
-    /*! 返回配置文件路径。如果文件不存在，将创建它。返回值已缓存。 */
-    static QString configurationFile();
-
-    /*! 返回配置文件路径。返回值已缓存。
-     * 安装时：
-     *   Linux：文件保存在配置目录下（例如~/.config/<appname>.conf）。
-     *   Windows：文件保存在应用程序数据路径下（例如C:/Users/<UserName>/AppData/Roaming/<OrgName>/<AppName>/<AppName>.cfg）。
-     * 便携式时（未安装或配置文件存在）：
-     *   Linux：使用当前目录下的配置文件（例如./.<appname>）。
-     *   Windows：使用当前目录下的配置文件（例如./<AppName>.cfg）。 */
-    static QString configurationFilePath();
-
-
-    /*! 设置配置文件路径。不验证路径是否适用于目的。
-     * \param configurationFilePath 配置文件的完整路径。 */
-    static void setConfigurationFilePath(QString configurationFilePath);
-
-    /*! 返回状态文件路径。如果文件不存在，将创建它。返回值已缓存。 */
-    static QString stateFile();
-
-    /*! 返回状态文件路径。返回值已缓存。
-    * 安装时：
-    *   Linux：文件保存在配置目录下（例如~/.config/<appname>.user）。
-    *   Windows：文件保存在应用程序数据路径下（例如C:/Users/<UserName>/AppData/Roaming/<OrgName>/<AppName>/<AppName>.user）。
-    * 便携式时（未安装或配置文件存在）：
-    *   Linux：使用当前目录下的配置文件（例如./.<appname>.user）。
-    *   Windows：使用当前目录下的配置文件（例如./<AppName>.user）。 */
-    static QString stateFilePath();
-
-    /*! 设置状态文件路径。不验证路径是否适用于目的。
-    * \param stateFilePath 状态文件的完整路径。 */
-    static void setStateFilePath(QString stateFilePath);
-
-    /*! 返回数据目录路径。如果目录不存在，将创建它。返回值已缓存。 */
-    static QString dataDirectory();
-
-    /*! 返回数据目录路径。返回值已缓存。
-    * 安装时：
-    *   Linux：数据将保存在本地共享目录中（例如~/.local/share/<appname>）。
-    *   Windows：数据将保存在应用程序数据路径的子目录中（例如C:/Users/<UserName>/AppData/Roaming/<OrgName>/<AppName>/Data/）。
-    * 便携式时（未安装或配置文件存在）：
-    *   Linux：使用当前目录下的子目录（例如./.<appname>.data）。
-    *   Windows：使用当前目录下的子目录（例如./<AppName>.Data/）。 */
-    static QString dataDirectoryPath();
-
-    /*! 设置数据目录路径。不验证路径是否适用于目的。
-    * \param dataDirectoryPath 数据目录的完整路径。 */
-    static void setDataDirectoryPath(QString dataDirectoryPath);
-
-    /*! 返回给定键的值，如果未找到，则返回空的QString。
-   * /param key 键。 */
-    static QString read(QString key);
-
-    /*! 返回给定键的值，如果未找到，则返回默认值。
-   * /param key 键。
-   * /param defaultValue 默认值。 */
-    static QString read(QString key, QString defaultValue);
-
-    /*! 将值写入给定键。
-    * /param key 键。
-    * /param value 值。 */
-    static void write(QString key, QString value);
-
-    /*! 返回给定键的值，如果未找到，则返回默认值。
-   * /param key 键。
-   * /param defaultValue 默认值。 */
-    static QString read(QString key, const char* defaultValue);
-
-    /*! 将值写入给定键。
-    * /param key 键。
-    * /param value 值。 */
-    static void write(QString key, const char* value);
-
-    /*! 返回给定键的值，如果未找到或无法转换为bool，则返回默认值。
-    * /param key 键。
-    * /param defaultValue 默认值。 */
-    static bool read(QString key, bool defaultValue);
-
-    /*! 将值写入给定键。
-    * /param key 键。
-    * /param value 值。 */
-    static void write(QString key, bool value);
-
-    /*! 返回给定键的值，如果未找到或无法转换为int，则返回默认值。
-    * /param key 键。
-    * /param defaultValue 默认值。 */
-    static int read(QString key, int defaultValue);
-
-    /*! 将值写入给定键。
-    * /param key 键。
-    * /param value 值。 */
-    static void write(QString key, int value);
-
-    /*! 返回给定键的值，如果未找到或无法转换为long，则返回默认值。
-    * /param key 键。
-    * /param defaultValue 默认值。 */
-    static long long read(QString key, long long defaultValue);
-
-    /*! 将值写入给定键。
-     * /param key 键。
-     * /param value 值。 */
-    static void write(QString key, long long value);
-
-    /*! 返回给定键的值，如果未找到或无法转换为double，则返回默认值。
-     * /param key 键。
-     * /param defaultValue 默认值。 */
-    static double read(QString key, double defaultValue);
-
-    /*! 将值写入给定键。
-     * /param key 键。
-     * /param value 值。 */
-    static void write(QString key, double value);
-
-    /*! 返回给定键的所有值，如果键不存在，则返回空列表。
-    * /param key 键。 */
-    static QStringList readMany(QString key);
-
-    /*! 返回给定键的所有值，如果键不存在，则返回默认值。
-     * /param key 键。
-     * /param defaultValues 默认值。 */
-    static QStringList readMany(QString key, QStringList defaultValues);
-
-    /*! 将值写入给定键。
-     * /param key 键。
-     * /param values 值。 */
-    static void writeMany(QString key, QStringList values);
-
-
-    /*! 删除给定键的所有值。
-    * /param key 键。 */
-    static void remove(QString key);
-
-    /*! 删除所有值。 */
-    static void removeAll();
-
-    /*! 返回给定键的状态值，如果未找到，则返回默认值。
-    * /param key 键。
-    * /param defaultValue 默认值。 */
-    static QString stateRead(QString key, QString defaultValue);
-
-    /*! 将状态值写入给定键。
-     * /param key 键。
-     * /param value 值。 */
-    static void stateWrite(QString key, QString value);
-
-    /*! 返回给定键的状态值，如果未找到，则返回默认值。
-     * /param key 键。
-     * /param defaultValue 默认值。 */
-    static QString stateRead(QString key, const char* defaultValue);
-
-    /*! 将状态值写入给定键。
-     * /param key 键。
-     * /param value 值。 */
-    static void stateWrite(QString key, const char* value);
-
-    /*! 返回给定键的状态值，如果未找到或无法转换为bool，则返回默认值。
-    * /param key 键。
-    * /param defaultValue 默认值。 */
-    static bool stateRead(QString key, bool defaultValue);
-
-    /*! 将状态值写入给定键。
-     * /param key 键。
-     * /param value 值。 */
-    static void stateWrite(QString key, bool value);
-
-    /*! 返回给定键的状态值，如果未找到或无法转换为int，则返回默认值。
-     * /param key 键。
-     * /param defaultValue 默认值。 */
-    static int stateRead(QString key, int defaultValue);
-
-    /*! 将状态值写入给定键。
-     * /param key 键。
-     * /param value 值。 */
-    static void stateWrite(QString key, int value);
-
-    /*! 返回给定键的状态值，如果未找到或无法转换为long，则返回默认值。
-     * /param key 键。
-     * /param defaultValue 默认值。 */
-    static long long stateRead(QString key, long long defaultValue);
-
-    /*! 将状态值写入给定键。
-     * /param key 键。
-     * /param value 值。 */
-    static void stateWrite(QString key, long long value);
-
-    /*! 返回给定键的状态值，如果未找到或无法转换为double，则返回默认值。
-     * /param key 键。
-     * /param defaultValue 默认值。 */
-    static double stateRead(QString key, double defaultValue);
-
-    /*! 将状态值写入给定键。
-     * /param key 键。
-     * /param value 值。 */
-    static void stateWrite(QString key, double value);
-
-
-    /*! 返回给定键的所有状态值，如果键不存在，则返回空列表。
-     * /param key 键。 */
-    static QStringList stateReadMany(QString key);
-
-    /*! 返回给定键的所有状态值，如果键不存在，则返回空列表。
-     * /param key 键。 */
-    static QStringList stateReadMany(QString key, QStringList defaultValues);
-
-    /*! 将状态值写入给定键。
-      * /param key 键。 */
-    static void stateWriteMany(QString key, QStringList values);
-
-private:
-    enum class PortableStatus{
-        Unknown=-1,
-        False=0,
-        True=1,
-        };
-
-private:
-    //确保多线程环境下对公共资源的访问没有冲突
-    static QMutex _publicAccessMutex;
-    /*配置文件路径、状态文件路径和数据目录路径*/
-    static QString _configurationFilePath;
-    static QString _stateFilePath;
-    static QString _dataDirectoryPath;
-    /*是否处于便携模式*/
-    static PortableStatus _isPortable;
-    /*写入配置时是否立即保存*/
-    static bool _immediateSave;
-    /*返回在便携模式和安装模式下的配置文件路径*/
-    static QString configurationFilePathWhenPortable();
-    static QString configurationFilePathWhenInstalled();
-    //    便携模式和安装模式下的状态文件路径
-    static QString stateFilePathWhenPortable();
-    static QString stateFilePathWhenInstalled();
-    /*便携模式和安装模式下的数据文件路径*/
-    static QString dataDirectoryPathWhenPortable();
-    static QString dataDirectoryPathWhenInstalled();
-
-
-private:
-    class ConfigFile{
     public:
-        /*文件种类，文件路径*/
-        ConfigFile(QString kind,QString filePath);
-        ~ConfigFile();
-        /*保存配置文件*/
-        bool save();
-        /*请求保存*/
-        void requestSave();
-        /*读取单个键值对*/
-        QString readOne(QString key);
-        QStringList readMany(QString key);
-        void writeOne(QString key, QString value);
-        void writeMany(QString key, QStringList value);
-        void removeMany(QString key);
-        void removeAll();
+
+        /*! Resets configuration. This includes cached data. */
+        static void reset();
+
+        /*! Forces reload of config file. Returns true if file exists. */
+        static bool load();
+
+        /*! Forces immediate save of a config file. Returns true if operation was successful. */
+        static bool save();
+
+        /*! Forces immediate save of a config file and cleans everything up in preparation to quit. */
+        static void quit();
+
+
+        /*! Returns if application is considered portable. Initial value will be auto-detected.
+        * Auto-detection:
+        *   Linux: It's assumed portable if config file is in the same directory or if executable's directory is not in one of the bin directories (~/bin, ~/.local/bin, /opt, /bin, /usr/bin, or /usr/local/bin)
+        *   Windows: It's assumed portable if config file is in current directory or if executable's directory is not C:\Program Files\. */
+        static bool isPortable();
+
+        /*! Sets if application will be considered portable. Invalidates configuration file and data directory path cache.
+         * \param isPortable If true, application will be considered portable. */
+        static void setPortable(bool portable);
+
+
+        /*! Returns if write to config will perform automatic save. Default is true. */
+        static bool immediateSave();
+
+        /*! Sets if write to config will perform automatic save.
+         * \param saveImmediately If true, any write will result in immediate save. */
+        static void setImmediateSave(bool saveImmediately);
+
+
+        /*! Returns configuration file path. If file doesn't exist, it's created. Returned value is cached. */
+        static QString configurationFile();
+
+        /*! Returns configuration file path. Returned value is cached.
+         * When installed:
+         *   Linux: File is saved in config directory (e.g. ~/.config/<appname>.conf).
+         *   Windows: File is saved under application data path (e.g. C:/Users/<UserName>/AppData/Roaming/<OrgName>/<AppName>/<AppName>.cfg).
+         * When iportable (either not installed or config file exists):
+         *   Linux: Config file under current directory is used (e.g. ./.<appname>).
+         *   Windows: Config file under current directory is used (e.g. ./<AppName>.cfg). */
+        static QString configurationFilePath();
+
+        /*! Sets configuration file path. No verification is made in regards to path suitability for purpose.
+         * \param configurationFilePath Full path to the configuration file. */
+        static void setConfigurationFilePath(QString configurationFilePath);
+
+
+        /*! Returns state file path. If file doesn't exist, it's created. Returned value is cached. */
+        static QString stateFile();
+
+        /*! Returns state file path. Returned value is cached.
+         * When installed:
+         *   Linux: File is saved in config directory (e.g. ~/.config/<appname>.user).
+         *   Windows: File is saved under application data path (e.g. C:/Users/<UserName>/AppData/Roaming/<OrgName>/<AppName>/<AppName>.user).
+         * When iportable (either not installed or config file exists):
+         *   Linux: Config file under current directory is used (e.g. ./.<appname>.user).
+         *   Windows: Config file under current directory is used (e.g. ./<AppName>.user). */
+        static QString stateFilePath();
+
+        /*! Sets state file path. No verification is made in regards to path suitability for purpose.
+         * \param stateFilePath Full path to the state file. */
+        static void setStateFilePath(QString stateFilePath);
+
+
+        /*! Returns data directory path. If directory doesn't exist, it's created. Returned value is cached. */
+        static QString dataDirectory();
+
+        /*! Returns data directory path. Returned value is cached.
+         * When installed:
+         *   Linux: Data will be saved in local share directory (e.g. ~/.local/share/<appname>).
+         *   Windows: Data subdirectory under application data path will be used (e.g. C:/Users/<UserName>/AppData/Roaming/<OrgName>/<AppName>/Data/).
+         * When portable (either not installed or config file exists):
+         *   Linux: Subdirectory is used (e.g. ./.<appname>.data).
+         *   Windows: Subdirectory is used (e.g. ./<AppName>.Data/). */
+        static QString dataDirectoryPath();
+
+        /*! Sets data directory path. No verification is made in regards to path suitability for purpose.
+         * \param dataDirectoryPath Full path to the data directory. */
+        static void setDataDirectoryPath(QString dataDirectoryPath);
+
+
+        /*! Returns value for a given key or null QString if one is not found.
+         * /param key Key. */
+        static QString read(QString key);
+
+        /*! Returns value for a given key or default value if one is not found.
+         * /param key Key.
+         * /param defaultValue Default value. */
+        static QString read(QString key, QString defaultValue);
+
+        /*! Writes value to a given key.
+         * /param key Key.
+         * /param value Value. */
+        static void write(QString key, QString value);
+
+        /*! Returns value for a given key or default value if one is not found.
+         * /param key Key.
+         * /param defaultValue Default value. */
+        static QString read(QString key, const char* defaultValue);
+
+        /*! Writes value to a given key.
+         * /param key Key.
+         * /param value Value. */
+        static void write(QString key, const char* value);
+
+        /*! Returns value for a given key or default value if one is not found or cannot be converted to bool.
+         * /param key Key.
+         * /param defaultValue Default value. */
+        static bool read(QString key, bool defaultValue);
+
+        /*! Writes value to a given key.
+         * /param key Key.
+         * /param value Value. */
+        static void write(QString key, bool value);
+
+        /*! Returns value for a given key or default value if one is not found or cannot be converted to int.
+         * /param key Key.
+         * /param defaultValue Default value. */
+        static int read(QString key, int defaultValue);
+
+        /*! Writes value to a given key.
+         * /param key Key.
+         * /param value Value. */
+        static void write(QString key, int value);
+
+        /*! Returns value for a given key or default value if one is not found or cannot be converted to long.
+         * /param key Key.
+         * /param defaultValue Default value. */
+        static long long read(QString key, long long defaultValue);
+
+        /*! Writes value to a given key.
+         * /param key Key.
+         * /param value Value. */
+        static void write(QString key, long long value);
+
+        /*! Returns value for a given key or default value if one is not found or cannot be converted to double.
+         * /param key Key.
+         * /param defaultValue Default value. */
+        static double read(QString key, double defaultValue);
+
+        /*! Writes value to a given key.
+         * /param key Key.
+         * /param value Value. */
+        static void write(QString key, double value);
+
+
+        /*! Returns all values for a given key or empty list if key doesn't exist.
+         * /param key Key. */
+        static QStringList readMany(QString key);
+
+        /*! Returns all values for a given key or default values if key doesn't exist.
+         * /param key Key.
+         * /param defaultValues Default values. */
+        static QStringList readMany(QString key, QStringList defaultValues);
+
+        /*! Writes values to a given key.
+         * /param key Key.
+         * /param values Values. */
+        static void writeMany(QString key, QStringList values);
+
+
+        /*! Remove all values of a given key.
+         * /param key Key. */
+        static void remove(QString key);
+
+        /*! Remove all values. */
+        static void removeAll();
+
+
+        /*! Returns state value for a given key or default value if one is not found.
+         * /param key Key.
+         * /param defaultValue Default value. */
+        static QString stateRead(QString key, QString defaultValue);
+
+        /*! Writes state value to a given key.
+         * /param key Key.
+         * /param value Value. */
+        static void stateWrite(QString key, QString value);
+
+        /*! Returns state value for a given key or default value if one is not found.
+         * /param key Key.
+         * /param defaultValue Default value. */
+        static QString stateRead(QString key, const char* defaultValue);
+
+        /*! Writes state value to a given key.
+         * /param key Key.
+         * /param value Value. */
+        static void stateWrite(QString key, const char* value);
+
+        /*! Returns state value for a given key or default value if one is not found or cannot be converted to bool.
+         * /param key Key.
+         * /param defaultValue Default value. */
+        static bool stateRead(QString key, bool defaultValue);
+
+        /*! Writes state value to a given key.
+         * /param key Key.
+         * /param value Value. */
+        static void stateWrite(QString key, bool value);
+
+        /*! Returns state value for a given key or default value if one is not found or cannot be converted to int.
+         * /param key Key.
+         * /param defaultValue Default value. */
+        static int stateRead(QString key, int defaultValue);
+
+        /*! Writes state value to a given key.
+         * /param key Key.
+         * /param value Value. */
+        static void stateWrite(QString key, int value);
+
+        /*! Returns state value for a given key or default value if one is not found or cannot be converted to long.
+         * /param key Key.
+         * /param defaultValue Default value. */
+        static long long stateRead(QString key, long long defaultValue);
+
+        /*! Writes state value to a given key.
+         * /param key Key.
+         * /param value Value. */
+        static void stateWrite(QString key, long long value);
+
+        /*! Returns state value for a given key or default value if one is not found or cannot be converted to double.
+         * /param key Key.
+         * /param defaultValue Default value. */
+        static double stateRead(QString key, double defaultValue);
+
+        /*! Writes state value to a given key.
+         * /param key Key.
+         * /param value Value. */
+        static void stateWrite(QString key, double value);
+
+
+        /*! Returns all state values for a given key or empty list if key doesn't exist.
+         * /param key Key. */
+        static QStringList stateReadMany(QString key);
+
+        /*! Returns all state values for a given key or default values if key doesn't exist.
+         * /param key Key.
+         * /param defaultValues Default values. */
+        static QStringList stateReadMany(QString key, QStringList defaultValues);
+
+        /*! Writes state values to a given key.
+         * /param key Key.
+         * /param values Values. */
+        static void stateWriteMany(QString key, QStringList values);
+
 
     private:
-        QMutex _cacheMutex;
-        QMutex _saveMutex;
-        QHash<QString,QVariant> _cache;
-
-    private:
-        class BackgroundSaveThread:private QThread{
-        public:
-            explicit BackgroundSaveThread(ConfigFile* config);
-            ~BackgroundSaveThread();
-
-        public:
-            void requestSave();
-            void cancelRequestedSave();
-
-        public:
-            BackgroundSaveThread(const BackgroundSaveThread&)=delete;
-            void operator=(const BackgroundSaveThread&)=delete;
-
-        private:
-            ConfigFile* _config= nullptr;
-            QMutex _syncRoot;
-            bool _saveRequested=false;
-            void run();
+        enum class PortableStatus {
+            Unknown = -1,
+            False   = 0,
+            True    = 1,
         };
-        Config::ConfigFile::BackgroundSaveThread* _backgroundSaveThread= nullptr;
 
     private:
-        /*文字编辑状态*/
-        enum class ProcessState {
-            Default,            // 默认状态
-            Comment,            // 注释状态
-            Key,                // 键的状态
-            KeyEscape,          // 键的转义状态
-            KeyEscapeLong,      // 键的长转义状态
-            SeparatorOrValue,   // 分隔符或值的状态
-            ValueOrWhitespace,  // 值或空白字符的状态
-            Value,              // 值的状态
-            ValueEscape,        // 值的转义状态
-            ValueEscapeLong,    // 值的长转义状态
-            ValueOrComment      // 值或注释的状态
+        static QMutex _publicAccessMutex; //to ensure multi-threaded access works without conflict
+        static QString _configurationFilePath;
+        static QString _stateFilePath;
+        static QString _dataDirectoryPath;
+        static PortableStatus _isPortable;
+        static bool _immediateSave;
+        static QString configurationFilePathWhenPortable();
+        static QString configurationFilePathWhenInstalled();
+        static QString stateFilePathWhenPortable();
+        static QString stateFilePathWhenInstalled();
+        static QString dataDirectoryPathWhenPortable();
+        static QString dataDirectoryPathWhenInstalled();
+
+    private:
+        class ConfigFile {
+            public:
+                ConfigFile(QString kind, QString filePath);
+                ~ConfigFile();
+                bool save();
+                void requestSave();
+                QString readOne(QString key);
+                QStringList readMany(QString key);
+                void writeOne(QString key, QString value);
+                void writeMany(QString key, QStringList value);
+                void removeMany(QString key);
+                void removeAll();
+
+
+            private:
+                QMutex _cacheMutex;          // used for line data
+                QMutex _saveMutex;           // used only for saving to file
+                QHash<QString, QVariant> _cache;
+
+            private:
+                class BackgroundSaveThread : private QThread {
+                    public:
+                        explicit BackgroundSaveThread(ConfigFile* config);
+                        ~BackgroundSaveThread();
+
+                    public:
+                        void requestSave();
+                        void cancelRequestedSave();
+
+                    public:
+                        BackgroundSaveThread(const BackgroundSaveThread&) = delete;
+                        void operator=(const BackgroundSaveThread&) = delete;
+
+                    private:
+                        ConfigFile* _config = nullptr;
+                        QMutex _syncRoot;
+                        bool _saveRequested = false;
+                        void run();
+                };
+                Config::ConfigFile::BackgroundSaveThread* _backgroundSaveThread = nullptr;
+
+            private:
+                enum class ProcessState {
+                    Default,
+                    Comment,
+                    Key,
+                    KeyEscape,
+                    KeyEscapeLong,
+                    SeparatorOrValue,
+                    ValueOrWhitespace,
+                    Value,
+                    ValueEscape,
+                    ValueEscapeLong,
+                    ValueOrComment,
+                };
+
+            private:
+                class LineData {
+
+                    public:
+                        LineData();
+                        LineData(LineData* lineTemplate, QString key, QString value);
+                        LineData(QString key, QString separatorPrefix, QString separator, QString separatorSuffix, QString value, QString commentPrefix, QString comment);
+
+                    public:
+                        QString getKey();
+                        QString getValue();
+                        void setValue(QString newValue);
+                        QString toString();
+                        static void escapeIntoStringBuilder(QString* sb, QString text, bool isKey = false);
+                        bool isEmpty();
+
+                    private:
+                        QString _key;
+                        QString _separatorPrefix;
+                        QString _separator;
+                        QString _separatorSuffix;
+                        QString _value;
+                        QString _commentPrefix;
+                        QString _comment;
+                };
+
+            private:
+                void processLine(QString line);
+//                QVector<LineData> _lines;
+                bool _fileLoaded;
+                QString _filePath;
+                QString _lineEnding;
+                QString _kind;
+
+            public:
+                QVector<LineData> _lines;
         };
 
     private:
-        class LineData{
-        public:
-            LineData();
-            LineData(LineData* lineTemplate,QString key,QString value);
-            LineData(QString key,QString separatorPrefix,QString separator,QString separatorSuffix,QString value,QString commentPrefix,QString  comment);
+        static ConfigFile* getConfigFile();
+        static void resetConfigFile();
+        static ConfigFile* _configFile;
+        static QMutex _configFileMutex;
+        static ConfigFile* getStateFile();
+        static void resetStateFile();
+        static ConfigFile* _stateFile;
+        static QMutex _stateFileMutex;
 
-        public:
-            QString getKey();
-            QString getValue();
-            void setValue(QString newValue);
-            QString toString();
-            static void escapeIntoStringBuilder(QString* sb, QString text, bool isKey = false);
-            bool isEmpty();
 
-        private:
-            QString _key;               // 用于存储数据的关键字或键
-            QString _separatorPrefix;   // 数据分隔符的前缀
-            QString _separator;         // 数据分隔符
-            QString _separatorSuffix;   // 数据分隔符的后缀
-            QString _value;             // 与关键字相关联的值
-            QString _commentPrefix;     // 注释的前缀
-            QString _comment;           // 注释的内容
-        };
-    private:
-        void processLine(QString line);  // 用于处理传入的文本行的函数
+    public:
+        static QString publicGetState(){
+                ConfigFile* stateFile = getStateFile();
 
-        QVector<LineData> _lines;        // 用于存储 LineData 类的实例的向量，表示多行数据
-        bool _fileLoaded;                // 用于标识文件是否已加载的布尔变量
-        QString _filePath;               // 用于存储文件路径的字符串
-        QString _lineEnding;             // 用于存储行结束符的字符串
-        QString _kind;                   // 用于表示某种类型的字符串
-    };
-private:
-    static ConfigFile* getConfigFile();    // 获取配置文件的静态成员函数
-    static void resetConfigFile();         // 重置配置文件的静态成员函数
-    static ConfigFile* _configFile;        // 静态成员变量，存储配置文件的实例
-    static QMutex _configFileMutex;        // 用于对配置文件进行互斥操作的互斥量
-    static ConfigFile* getStateFile();     // 获取状态文件的静态成员函数
-    static void resetStateFile();          // 重置状态文件的静态成员函数
-    static ConfigFile* _stateFile;         // 静态成员变量，存储状态文件的实例
-    static QMutex _stateFileMutex;         // 用于对状态文件进行互斥操作的互斥量
+                QString result; // 用于存储遍历输出的内容
+
+                // 遍历 _lines
+                for (auto lineData : stateFile->_lines) {
+                        // 将每行内容追加到结果中
+                        result += lineData.toString() + "\n";
+                }
+
+                // 输出结果
+//                qInfo() << result;
+
+                // 返回结果
+                return result;
+        }
 
 
 };
-#endif //NOTES_CONFIG_H
