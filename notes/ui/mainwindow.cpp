@@ -40,12 +40,9 @@
 
 MainWindow::MainWindow(Storage* storage) : QMainWindow(nullptr), ui(new Ui::MainWindow) {
     ui->setupUi(this);
-    //ui->tabWidget->tabBar()->setStyleSheet("QTabBar::tab:!selected { background: #10000000; }");
+    ui->tabWidget->tabBar()->setStyleSheet("QTabBar::tab:!selected { background: #10000000; }");
 
-    //    comboBox = new QComboBox(this);
-    //    int x = 420; // 你想要的 x 坐标
-    //    int y = 0; // 你想要的 y 坐标
-    //    comboBox->setGeometry(x, y, 60, 30); // 设置宽度和高度
+
     _storage = storage;
 
     //application icon

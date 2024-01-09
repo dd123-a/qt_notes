@@ -352,7 +352,6 @@ void Helpers::setupResizableDialog(QWidget* dialog) {
             button->setIcon(QIcon());
         }
     }
-
 }
 
 /*!

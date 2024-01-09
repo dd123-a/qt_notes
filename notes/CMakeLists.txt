@@ -23,6 +23,7 @@ add_definitions(
 
 
 add_executable(${PROJECT_NAME}
+        icons
         medo/about.h
         medo/appsetupmutex.h
         medo/config.h
