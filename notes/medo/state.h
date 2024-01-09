@@ -1,7 +1,6 @@
-/* Josip Medved <jmedved@jmedved.com> * www.medo64.com * MIT License */
-
-// 2019-07-15: Initial version
-// 2020-01-01: Added widget methods
+//
+// Created by DrTang
+//
 
 #pragma once
 

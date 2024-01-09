@@ -1,9 +1,6 @@
-/* Josip Medved <jmedved@jmedved.com> * www.medo64.com * MIT License */
-// 2023-05-28: Split into separate files for Dconf/XCB/Wind
-// 2020-06-06: Added support for suspend and resume
-// 2019-10-04: Reorganizing includes to minimize conflicts
-// 2019-09-16: Allowing Meta/Win key as a hotkey modifier
-// 2019-07-05: Initial version
+//
+// Created by DrTang
+//
 
 #pragma once
 #include <QAbstractNativeEventFilter>

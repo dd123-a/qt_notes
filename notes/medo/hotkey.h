@@ -1,5 +1,6 @@
-/* Josip Medved <jmedved@jmedved.com> * www.medo64.com * MIT License */
-// 2023-05-28: Initial version
+//
+// Created by DrTang
+//
 
 #pragma once
 #include <QObject>

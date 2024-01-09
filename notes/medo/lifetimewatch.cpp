@@ -1,4 +1,6 @@
-/* Josip Medved <jmedved@jmedved.com> * www.medo64.com * MIT License */
+//
+// Created by DrTang
+//
 
 #include <QDebug>
 #include "lifetimewatch.h"

@@ -51,7 +51,7 @@ bool Deletion::recycleFile(FileItem* file) {
         fileOp.wFunc = FO_DELETE;
         fileOp.pFrom =  fromPathArray;
         fileOp.fFlags = FOF_NO_UI | FOF_ALLOWUNDO;
-        if (SHFileOperation(&fileOp) == 0) {
+        if (SHFileOperationW(&fileOp) == 0) {
             return true;
         } else { //just delete if recycle fails
             qDebug().noquote() << "[Deletion] Recycle failed for '" << osFile.fileName() << "'";

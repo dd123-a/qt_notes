@@ -11,7 +11,7 @@ AppSetupMutex::AppSetupMutex(const QString& mutexName) {
     int len = mutexName.toWCharArray(mutexNameChars);
     assert(len + 1 < mutexNameLength);
     mutexNameChars[len] = '\0';
-    _mutexHandle = CreateMutex(NULL, false, reinterpret_cast<LPCSTR>(mutexNameChars));
+    _mutexHandle = CreateMutexW(NULL, false, mutexNameChars);
     if (_mutexHandle != nullptr) {
         qDebug().noquote() << "[AppSetupMutex]" << mutexName << "created as" << _mutexHandle;
     } else {

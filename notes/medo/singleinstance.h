@@ -1,7 +1,6 @@
-/* Josip Medved <jmedved@jmedved.com> * www.medo64.com * MIT License */
-
-// 2020-05-07: Changed signal/slot call
-// 2019-07-06: Initial version
+//
+// Created by DrTang
+//
 
 #pragma once
 

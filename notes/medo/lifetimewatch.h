@@ -1,6 +1,6 @@
-/* Josip Medved <jmedved@jmedved.com> * www.medo64.com * MIT License */
-
-// 2021-12-09: Initial version
+//
+// Created by DrTang
+//
 
 #pragma once
 
